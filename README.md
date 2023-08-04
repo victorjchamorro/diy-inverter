@@ -1,4 +1,4 @@
-# dyi-inverter
+# diy-inverter
 Creación de un inversor partiendo de un Xantrex ProWatt 1400i averiado
 
 Serie de vídeos en youtube:
