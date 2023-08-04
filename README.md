@@ -12,7 +12,7 @@ Imágenes:
 La idea es remplazar toda la electrónica de control por un circuito nuevo, aprovechando los componentes de potencia existentes en la placa
 
 - arduino: arduino code
-- kicad: shemas and gerbers
+- kicad: schemas and gerbers
 - pictures: fotografías
 - utl: utilidades
 
