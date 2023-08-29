@@ -8,10 +8,10 @@
 #define AT3 A3  //Sensor temperatura 3
 #define DSD 13  //Salida digital de stop para el pwm de la 1ª etapa
 #define DSPWM 3 //Salida digital de start para el generador spwm de la 2ª etapa
-#define DFAN 4  //Salida digital para el ventilador
+#define DFAN 5  //Salida digital para el ventilador
 
 // Conf
-#define MUESTRAS 50
+#define MUESTRAS 100
 #define DIVISOR1 3.7
 
 // Debug
@@ -28,6 +28,9 @@ float voltMaxRestart = 14.0;    //Voltaje recuperación tras voltaje máximo
 
 // Temp
 float temp1 = 0;
+float temp2 = 0;
+float temp3 = 0;
+
 float tempMax = 60.0;           //Temp Máxima
 float tempMaxRestart = 40.0;    //Temp recuperación tras voltaje máximo
 float tempStopFan = 30.0;       //Temp apagado ventilador
@@ -39,6 +42,8 @@ unsigned long tError = 0;   //milisegundo en el cuall ocurrió el error de volta
 int tErrorDuration = 4000;  //milisegundos mínimos que durará el estado de error (para evitar rebotes)
 bool error = false;         //Estado pwm parado por error
 bool fanOn = false;         //Estado de encendido del ventilador
+
+int pasoTemp = 1;
 
 int estadoIcono = 0;
 
@@ -208,7 +213,7 @@ void initLCD(){
   lcd.setCursor(0,0);
   lcd.write("Batt: ");
   lcd.setCursor(0,1);
-  lcd.write("Temp: ");
+  lcd.write("Temp  :");
 }
 
 // Actualiza la pantalla LCD
@@ -221,7 +226,7 @@ void printInfo(){
     //Serial.println(ADCvRef/1000.0/atenuacion);
     Serial.print("vBat: ");
     Serial.println(voltBatt);
-    Serial.print("Temp: ");
+    Serial.print("Temp  :");
     Serial.println(temp1);
   }
 
@@ -233,10 +238,38 @@ void printInfo(){
   lcd.print(round(voltBatt*100)/100.0,DEC);
   lcd.setCursor(15,0);
   lcd.write("V");
-  lcd.setCursor(10,1);
-  lcd.print(round(temp1*100)/100.0,DEC);
-  lcd.setCursor(15,1);
-  lcd.write(223); //Carácter º (Grados)
+
+  //Temp 1;
+
+  switch(pasoTemp){
+    case 1:
+      pasoTemp = 2;
+      lcd.setCursor(5,1);
+      lcd.print("1");
+      lcd.setCursor(10,1);
+      lcd.print(round(temp1*100)/100.0,DEC);
+      lcd.setCursor(15,1);
+      lcd.write(223); //Carácter º (Grados)
+      break;
+    case 2:
+      pasoTemp = 3;
+      lcd.setCursor(5,1);
+      lcd.print("2");
+      lcd.setCursor(10,1);
+      lcd.print(round(temp2*100)/100.0,DEC);
+      lcd.setCursor(15,1);
+      lcd.write(223); //Carácter º (Grados)
+      break;
+    case 3:
+      pasoTemp = 1;
+      lcd.setCursor(5,1);
+      lcd.print("3");
+      lcd.setCursor(10,1);
+      lcd.print(round(temp3*100)/100.0,DEC);
+      lcd.setCursor(15,1);
+      lcd.write(223); //Carácter º (Grados)
+      break;
+  }
 
   if (error){
     if (estadoIcono<1){
@@ -313,7 +346,7 @@ bool checkVoltMax(){
 
 // Devuelve true si la temperatura es elevada
 bool checkTempMax(){
-  bool maxerror = (temp1>tempMax);
+  bool maxerror = (temp1>tempMax) || (temp2>tempMax) || (temp3>tempMax);
   if (maxerror){
     tError = millis();
   }
@@ -324,14 +357,16 @@ bool checkTempMax(){
 bool checkVentilador(){
   if (fanOn == true){
     //Miro si tengo que apagar
-    if(temp1<tempStopFan){
-      digitalWrite(DFAN,LOW);
+    if(temp1<tempStopFan && temp2<tempStopFan && temp3<tempStopFan){
+      //digitalWrite(DFAN,LOW);
+      analogWrite(DFAN,0);
       fanOn = false;
     }
   }else{
     //Miro si tengo que encender
-    if(temp1>tempStartFan){
-      digitalWrite(DFAN,HIGH);
+    if(temp1>tempStartFan || temp2>tempStartFan || temp3>tempStartFan){
+      //digitalWrite(DFAN,HIGH);
+      analogWrite(DFAN,map(12,0,40,0,254));
       fanOn = true;
     }
   }
@@ -391,15 +426,17 @@ void loop() {
   ADCvRef = vRefADC();
   voltBatt= vBatt();
   temp1   = cTemp(AT1);
+  temp2   = cTemp(AT2);
+  temp3   = cTemp(AT3);
 
   checkVentilador();
 
   if (error == true){
     unsigned long now = millis();
 
-    if ((tError + tErrorDuration) > now){
+    if ((tError + tErrorDuration) < now){
       //Ha pasado el tiempo de error, chequeamos si ya estamos en rangos de recuperación
-      if(voltBatt>voltMinRestart &&  voltBatt < voltMaxRestart && temp1<tempMaxRestart){   
+      if(voltBatt>voltMinRestart &&  voltBatt < voltMaxRestart && temp1<tempMaxRestart && temp2<tempMaxRestart && temp3<tempMaxRestart){   
         resetError();
       }else{
         //Volvemos a resetear el tiempo de error para que vuelva a esperar
