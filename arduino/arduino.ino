@@ -22,7 +22,7 @@ int ADCvRef=0;
 float voltBatt=0;
 float atenuacion = 1.027;
 float voltMax = 15.5;           //Voltaje Máximo
-float voltMin = 10.6;           //Voltaje Mínimo
+float voltMin = 10.5;           //Voltaje Mínimo
 float voltMinRestart = 12.0;    //Voltaje recuperación tras voltaje mínimo
 float voltMaxRestart = 14.0;    //Voltaje recuperación tras voltaje máximo
 
@@ -33,7 +33,7 @@ float temp3 = 0;
 
 float tempMax = 60.0;           //Temp Máxima
 float tempMaxRestart = 40.0;    //Temp recuperación tras voltaje máximo
-float tempStopFan = 30.0;       //Temp apagado ventilador
+float tempStopFan = 32.0;       //Temp apagado ventilador
 float tempStartFan = 40.0;      //Temp encendido ventilador
 
 
@@ -95,7 +95,7 @@ void initLCD(){
   
   lcd.begin(16, 2);
 
-  byte customChar1[] = {
+  /*byte customChar1[] = {
         B00111,
         B01111,
         B11111,
@@ -230,7 +230,9 @@ void printInfo(){
     Serial.println(temp1);
   }
 
-
+  if (pasoTemp == 1){
+    initLCD();
+  }
   
   
 
@@ -277,14 +279,17 @@ void printInfo(){
         estadoIcono=estadoIcono+1;
   
         lcd.setCursor(7,0);
-        lcd.write(byte(0));
+        lcd.print("FA");
+        lcd.setCursor(7,1);
+        lcd.print("IL");
+        /*lcd.write(byte(0));
         lcd.setCursor(8,0);
         lcd.write(byte(1));
         lcd.setCursor(7,1);
         lcd.write(byte(2));
         lcd.setCursor(8,1);
         lcd.write(byte(3));
-          
+          */
           
     }else{
   
@@ -292,7 +297,11 @@ void printInfo(){
       if (estadoIcono>1){
         estadoIcono=0;
       }
-
+      lcd.setCursor(7,0);
+      lcd.print("IL");
+      lcd.setCursor(7,1);
+      lcd.print("FA");
+      /*
       lcd.setCursor(7,0);
       lcd.write(byte(4));
       lcd.setCursor(8,0);
@@ -301,6 +310,7 @@ void printInfo(){
       lcd.write(byte(6));
       lcd.setCursor(8,1);
       lcd.write(byte(7));
+      */
     }
 
 /*
@@ -365,8 +375,7 @@ bool checkVentilador(){
   }else{
     //Miro si tengo que encender
     if(temp1>tempStartFan || temp2>tempStartFan || temp3>tempStartFan){
-      //digitalWrite(DFAN,HIGH);
-      analogWrite(DFAN,map(12,0,40,0,254));
+      analogWrite(DFAN,170); //Usamos pwm para ajustar a 12v en lugar de los 16 que tenemos
       fanOn = true;
     }
   }
