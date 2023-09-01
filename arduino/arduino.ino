@@ -31,9 +31,9 @@ float temp1 = 0;
 float temp2 = 0;
 float temp3 = 0;
 
-float tempMax = 60.0;           //Temp Máxima
+float tempMax = 55.0;           //Temp Máxima
 float tempMaxRestart = 40.0;    //Temp recuperación tras voltaje máximo
-float tempStopFan = 32.0;       //Temp apagado ventilador
+float tempStopFan = 34.0;       //Temp apagado ventilador
 float tempStartFan = 40.0;      //Temp encendido ventilador
 
 
